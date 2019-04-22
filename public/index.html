@@ -1,0 +1,65 @@
+<html>
+
+<head>
+  <title>Express</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+  <h1>Express</h1>
+  <ul id="msgList">
+  </ul>
+  <input type="text" style="width: 100%;" id="msg"/>
+  <button type="button" onclick="sendMsg()">Send!</button>
+  <script>
+    var socket = io();
+    const msgInput = document.getElementById('msg')
+    let notify = () => {};
+
+    Notification.requestPermission().then(
+      () => {
+        console.log('resolve notify')
+        notify = msg => {
+          console.log('notify', msg)
+          new Notification('Express Charts', {
+            body: msg
+          })
+        }
+      },
+      () => {
+        console.log('reject notify')
+      }
+    )
+
+    socket.on('connect', function () {
+      console.log('connected')
+      const msgList = document.getElementById('msgList')
+      socket.on('committed msg', function (msg) {
+        console.log('committed msg')
+        const li = document.createElement('li')
+        li.innerHTML = msg
+        msgList.appendChild(li)
+        notify(msg)
+      });
+    });
+
+    const sendMsg = () => {
+      const li = document.createElement('li')
+      li.innerHTML = msgInput.value
+      msgList.appendChild(li)
+      socket.emit('commit msg', msgInput.value)
+      msgInput.value = ""
+    }
+
+    msgInput.addEventListener('keyup', event => {
+      console.log('keyup', event)
+      if (event.key === 'Enter') {
+        console.log('enter keyup')
+        sendMsg()
+      }
+    })
+  </script>
+</body>
+
+</html>
